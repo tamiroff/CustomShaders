@@ -17,7 +17,7 @@
 	"Modules": [
 		{
 			"Name": "CustomShaders",
-			"Type": "Developer",
+			"Type": "DeveloperTool",
 			"LoadingPhase": "PostConfigInit"
 		}
 	]
