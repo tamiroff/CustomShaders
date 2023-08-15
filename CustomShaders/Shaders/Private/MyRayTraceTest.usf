@@ -39,7 +39,7 @@ RAY_TRACING_ENTRY_RAYGEN(RayTraceTestRGS)
     );
 
 	if (Payload.IsHit())
-        outTex[PixelCoord] = 1.0f;
+        outTex[PixelCoord] = Payload.HitT;
 	else
 		outTex[PixelCoord] = 0.0f;
 }
@@ -53,5 +53,6 @@ void RayTraceTestMS(inout FMinimalPayload data)
 [shader("closesthit")]
 void RayTraceTestCHS(inout FMinimalPayload data, BuiltInTriangleIntersectionAttributes attribs)
 {
-    data.HitT = 1.0f;
+    data.HitT = RayTCurrent()/10000.0f;
+    //data.HitT = 1;
 }
