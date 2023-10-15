@@ -29,6 +29,7 @@ struct  FRayGenTestParameters
 	UTextureRenderTarget2D* RenderTarget;
 	FRayTracingScene* Scene;
 	FIntPoint CachedRenderTargetSize;
+	float FooBarArray[16];
 };
 
 class CUSTOMSHADERS_API FRayGenTest
@@ -43,21 +44,26 @@ private:
 	void Execute_RenderThread(FPostOpaqueRenderParameters& Parameters);
 
 	/// The delegate handle to our function that will be executed each frame by the renderer
-	FDelegateHandle PostOpaqueRenderDelegate;
+	FDelegateHandle mPostOpaqueRenderDelegate;
+
 	/// Cached Shader Manager Parameters
-	FRayGenTestParameters CachedParams;
+	FRayGenTestParameters mCachedParams;
+
 	/// Whether we have cached parameters to pass to the shader or not
 	volatile bool bCachedParamsAreValid;
 
 	/// We create the shader's output texture and UAV and save to avoid reallocation
-	FTexture2DRHIRef ShaderOutputTexture;
-	FUnorderedAccessViewRHIRef ShaderOutputTextureUAV;
+	FTexture2DRHIRef mShaderOutputTexture;
+	FUnorderedAccessViewRHIRef mShaderOutputTextureUAV;
 };
+
 
 #define NUM_THREADS_PER_GROUP_DIMENSION 8
 
 class FRayGenTestRGS : public FGlobalShader
 {
+	float FooBarArray[16];
+
 	DECLARE_GLOBAL_SHADER(FRayGenTestRGS)
 	SHADER_USE_ROOT_PARAMETER_STRUCT(FRayGenTestRGS, FGlobalShader)
 	
@@ -65,6 +71,7 @@ class FRayGenTestRGS : public FGlobalShader
 		SHADER_PARAMETER_UAV(RWTexture2D<float4>, outTex)
 		SHADER_PARAMETER_SRV(RaytracingAccelerationStructure, TLAS)
 		SHADER_PARAMETER_STRUCT_REF(FViewUniformShaderParameters, ViewUniformBuffer)
+		SHADER_PARAMETER_SCALAR_ARRAY(float ,FooBarArray ,[16])
 	END_SHADER_PARAMETER_STRUCT()
 
 	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)

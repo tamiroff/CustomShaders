@@ -13,10 +13,10 @@ ATestRunner::ATestRunner()
 void ATestRunner::BeginPlay()
 {
 	Super::BeginPlay();
-	Test = FRayGenTest();
+	mTest = FRayGenTest();
 	Initialized = false;
 
-	if (RenderTarget != nullptr)
+	if (mRenderTarget != nullptr)
 		UpdateTestParameters();
 }
 
@@ -24,9 +24,9 @@ void ATestRunner::UpdateTestParameters()
 {
 	FRayGenTestParameters parameters;
 	parameters.Scene = &GetWorld()->Scene->GetRenderScene()->RayTracingScene;
-	parameters.CachedRenderTargetSize = FIntPoint(RenderTarget->SizeX, RenderTarget->SizeY);
-	parameters.RenderTarget = RenderTarget;
-	Test.UpdateParameters(parameters);
+	parameters.CachedRenderTargetSize = FIntPoint(mRenderTarget->SizeX, mRenderTarget->SizeY);
+	parameters.RenderTarget = mRenderTarget;
+	mTest.UpdateParameters(parameters);
 }
 
 // Called every frame
@@ -37,13 +37,13 @@ void ATestRunner::Tick(float DeltaTime)
 
 	// we want a slight delay before we start, otherwise some resources such as the accelerated 
 	// structure will not be ready
-	if(RenderTarget != nullptr && TranscurredTime>1.0f)
+	if(mRenderTarget != nullptr && TranscurredTime>1.0f)
 	{
 		UpdateTestParameters();
 
 		if(!Initialized)
 		{
-			Test.BeginRendering();
+			mTest.BeginRendering();
 			Initialized = true;
 		}
 	}
@@ -51,5 +51,5 @@ void ATestRunner::Tick(float DeltaTime)
 void ATestRunner::BeginDestroy()
 {
 	Super::BeginDestroy();
-	Test.EndRendering();
+	mTest.EndRendering();
 }
