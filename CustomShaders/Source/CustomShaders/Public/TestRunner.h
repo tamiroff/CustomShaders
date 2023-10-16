@@ -12,10 +12,10 @@ class CUSTOMSHADERS_API ATestRunner : public AActor
 	
 public:	
 	ATestRunner();
-	FRayGenTest Test;
+	FRayGenTest mTest;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = ShaderDemo)
-	class UTextureRenderTarget2D* RenderTarget = nullptr;
+	class UTextureRenderTarget2D* mRenderTarget = nullptr;
 	
 protected:
 	virtual void BeginPlay() override;

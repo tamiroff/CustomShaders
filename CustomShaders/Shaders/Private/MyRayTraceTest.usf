@@ -19,7 +19,7 @@ RAY_TRACING_ENTRY_RAYGEN(RayTraceTestRGS)
 	Ray.Origin = WorldPosition;
     Ray.Direction = CameraDirection;
     Ray.TMin = 0.0f;
-    Ray.TMax = 9999;
+    Ray.TMax = 99999999;
 
 	// consider opaque geometries and front facing triangles only
     uint RayFlags = RAY_FLAG_FORCE_OPAQUE | RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
@@ -53,6 +53,6 @@ void RayTraceTestMS(inout FMinimalPayload data)
 [shader("closesthit")]
 void RayTraceTestCHS(inout FMinimalPayload data, BuiltInTriangleIntersectionAttributes attribs)
 {
-    data.HitT = RayTCurrent()/10000.0f;
+    data.HitT = RayTCurrent()/100000.0f;
     //data.HitT = 1;
 }

@@ -43,16 +43,19 @@ private:
 	void Execute_RenderThread(FPostOpaqueRenderParameters& Parameters);
 
 	/// The delegate handle to our function that will be executed each frame by the renderer
-	FDelegateHandle PostOpaqueRenderDelegate;
+	FDelegateHandle mPostOpaqueRenderDelegate;
+
 	/// Cached Shader Manager Parameters
-	FRayGenTestParameters CachedParams;
+	FRayGenTestParameters mCachedParams;
+
 	/// Whether we have cached parameters to pass to the shader or not
 	volatile bool bCachedParamsAreValid;
 
 	/// We create the shader's output texture and UAV and save to avoid reallocation
-	FTexture2DRHIRef ShaderOutputTexture;
-	FUnorderedAccessViewRHIRef ShaderOutputTextureUAV;
+	FTexture2DRHIRef mShaderOutputTexture;
+	FUnorderedAccessViewRHIRef mShaderOutputTextureUAV;
 };
+
 
 #define NUM_THREADS_PER_GROUP_DIMENSION 8
 
