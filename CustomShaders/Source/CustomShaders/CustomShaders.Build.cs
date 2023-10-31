@@ -26,9 +26,10 @@ public class CustomShaders : ModuleRules
 			new string[]
 			{
 				"Core",
+				"Renderer",
 				// ... add other public dependencies that you statically link with here ...
 			}
-			);
+            );
 			
 		
 		PrivateDependencyModuleNames.AddRange(
@@ -40,6 +41,7 @@ public class CustomShaders : ModuleRules
 				"RenderCore",
 				"RHI",
 				"Renderer",
+				"ImageWriteQueue",
 				"Projects",
 				// ... add private dependencies that you statically link with here ...	
 			}

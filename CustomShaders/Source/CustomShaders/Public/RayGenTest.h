@@ -4,6 +4,8 @@
 
 #include "RayTracingPayloadType.h"
 #include "ShaderParameterStruct.h"
+#include "Runtime/Renderer/Private/SceneTextureParameters.h"
+//D:\Unreal\Engines\UE_5_2_1\Engine\Source\Runtime\Renderer\Private\RayTracing\RayTracingAmbientOcclusion.cpp
 
 #include "RenderGraphUtils.h"
 #include "Engine/TextureRenderTargetVolume.h"
@@ -39,8 +41,22 @@ public:
 	void BeginRendering();
 	void EndRendering();
 	void UpdateParameters(FRayGenTestParameters& DrawParameters);
+
+	float* mOutValBuf = nullptr;
+	float* mOutValFloat = nullptr;
+	size_t mTextureSizePixelsX = 0;
+	size_t mTextureSizePixelsY = 0;
+	size_t mTextureSizePixels = 0;
+	size_t mElementSize = 0;
+	size_t mElementTypeSizeBytes = 0;
+	size_t mBufferSizeBytes = 0;
+	FString mFolderDateTime;
+
+	void SaveBuffer(const float* a);
 private:
 	void Execute_RenderThread(FPostOpaqueRenderParameters& Parameters);
+
+
 
 	/// The delegate handle to our function that will be executed each frame by the renderer
 	FDelegateHandle mPostOpaqueRenderDelegate;
@@ -54,6 +70,16 @@ private:
 	/// We create the shader's output texture and UAV and save to avoid reallocation
 	FTexture2DRHIRef mShaderOutputTexture;
 	FUnorderedAccessViewRHIRef mShaderOutputTextureUAV;
+
+	//FRDGBufferUAVRef mDebugTexRef;
+	//FRDGBufferUAV mDebugTex;
+	//FRDGBuffer mRDGBuffer;
+	//FRDGBufferUAVDesc mRDGBufferDesc;
+	//FRDGBufferRef mInBufferRef;
+	//FRDGBuffer mInBuffer;
+	//FRDGBufferDesc mRDGBufferDesc;
+
+	//FRHIGPUBufferReadback* GPUBufferReadback = nullptr;
 };
 
 
@@ -65,10 +91,18 @@ class FRayGenTestRGS : public FGlobalShader
 	SHADER_USE_ROOT_PARAMETER_STRUCT(FRayGenTestRGS, FGlobalShader)
 	
 	BEGIN_SHADER_PARAMETER_STRUCT(FParameters,)
+		SHADER_PARAMETER(float, MyValue)
 		SHADER_PARAMETER_UAV(RWTexture2D<float4>, outTex)
+		SHADER_PARAMETER_RDG_BUFFER_UAV(RWBuffer<float>, DebugTex)
+		//SHADER_PARAMETER_RDG_BUFFER_UAV(RWTexture2D<float3>, DebugTexFloat)
+		//SHADER_PARAMETER_UAV(RWTexture2D<int>, DebugTex)
+		//SHADER_PARAMETER_UAV(RWTexture2D<float>, DebugTex)
+		//SHADER_PARAMETER_RDG_BUFFER_UAV(RWBuffer<float>, DebugBuffer)
 		SHADER_PARAMETER_SRV(RaytracingAccelerationStructure, TLAS)
+		SHADER_PARAMETER_STRUCT_INCLUDE(FSceneTextureParameters ,SceneTextures)
 		SHADER_PARAMETER_STRUCT_REF(FViewUniformShaderParameters, ViewUniformBuffer)
 	END_SHADER_PARAMETER_STRUCT()
+
 
 	static bool ShouldCompilePermutation(const FGlobalShaderPermutationParameters& Parameters)
 	{

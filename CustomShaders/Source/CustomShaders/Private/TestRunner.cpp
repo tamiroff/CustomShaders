@@ -37,7 +37,7 @@ void ATestRunner::Tick(float DeltaTime)
 
 	// we want a slight delay before we start, otherwise some resources such as the accelerated 
 	// structure will not be ready
-	if(mRenderTarget != nullptr && TranscurredTime>1.0f)
+	if(mRenderTarget != nullptr && TranscurredTime>3.0f)
 	{
 		UpdateTestParameters();
 

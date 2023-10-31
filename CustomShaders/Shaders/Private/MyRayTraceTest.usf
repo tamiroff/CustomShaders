@@ -1,58 +1,117 @@
 #include "/Engine/Private/Common.ush"
+
+//#include "/Engine/Private/Montecarlo.ush"
+//#include "/Engine/Private/DeferredShadingCommon.ush"
+#include "/Engine/Private/SceneTextureParameters.ush"
+//#include "/Engine/Private/PathTracing/Utilities/PathTracingRandomSequence.ush"
+//#include "/Engine/Private/SphericalGaussian.ush"
+//#include "/Engine/Private/Strata/Strata.ush"
+
+
 #include "/Engine/Private/RayTracing/RayTracingCommon.ush"
 #include "/Engine/Private/RayTracing/RayTracingHitGroupCommon.ush"
+//#include "/Engine/Private/RayTracing/RayTracingDeferredShadingCommon.ush"
 
-
+float MyValue;
 RWTexture2D<float4> outTex;
+RWBuffer<float> DebugTex;
 RaytracingAccelerationStructure TLAS;
 
 RAY_TRACING_ENTRY_RAYGEN(RayTraceTestRGS)
 {
-    // reconstruct camera direction with a small (far) device z
-    uint2 PixelCoord = DispatchRaysIndex().xy + View.ViewRectMin.xy;
-    float3 WorldPosition;
-    float3 CameraDirection;
-	ReconstructTranslatedWorldPositionAndCameraDirectionFromDeviceZ(PixelCoord, 0.1f, WorldPosition, CameraDirection);
+	// reconstruct camera direction with a small (far) device z
+	uint2 PixelCoord = DispatchRaysIndex().xy + View.ViewRectMin.xy;
+
+	uint3 ViewDim = DispatchRaysDimensions();
+
+	const float DeviceZ = SceneDepthTexture.Load(int3(PixelCoord ,0)).r;
+	const float SceneDepth = ConvertFromDeviceZ(DeviceZ);
+
+	float3 WorldPosition;
+	float3 CameraDirection;
+	ReconstructTranslatedWorldPositionAndCameraDirectionFromDeviceZ(PixelCoord ,DeviceZ ,WorldPosition ,CameraDirection);
+	//ReconstructTranslatedWorldPositionAndCameraDirectionFromDeviceZ(PixelCoord ,0.1f ,WorldPosition ,CameraDirection);
 
 	// setup ray, simply shoot a long distance
-    RayDesc Ray;
+	RayDesc Ray;
 	Ray.Origin = WorldPosition;
-    Ray.Direction = CameraDirection;
-    Ray.TMin = 0.0f;
-    Ray.TMax = 99999999;
+	Ray.Direction = CameraDirection;
+	Ray.TMin = 0.0f;
+	Ray.TMax = 10000000;
 
 	// consider opaque geometries and front facing triangles only
-    uint RayFlags = RAY_FLAG_FORCE_OPAQUE | RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
+	uint RayFlags = RAY_FLAG_FORCE_OPAQUE | RAY_FLAG_CULL_BACK_FACING_TRIANGLES;
 
 	// use material closest hit pay load
-    FMinimalPayload Payload = (FMinimalPayload) 0;
-	
-	TraceRay(
-    	TLAS,   // AccelerationStructure
-    	RayFlags,
-    	RAY_TRACING_MASK_OPAQUE,          // InstanceInclusionMask, defined by UE4
-    	RAY_TRACING_SHADER_SLOT_MATERIAL, // RayContributionToHitGroupIndex, defined by UE4
-    	RAY_TRACING_NUM_SHADER_SLOTS,     // MultiplierForGeometryContributionToShaderIndex, defined by UE4
-    	0,      // MissShaderIndex
-    	Ray,    // RayDesc
-    	Payload // Payload
-    );
+	FMinimalPayload Payload = (FMinimalPayload)0;
 
-	if (Payload.IsHit())
-        outTex[PixelCoord] = Payload.HitT;
-	else
-		outTex[PixelCoord] = 0.0f;
+	TraceRay(
+		TLAS ,   // AccelerationStructure
+		RayFlags ,
+		RAY_TRACING_MASK_OPAQUE ,          // InstanceInclusionMask, defined by UE4
+		RAY_TRACING_SHADER_SLOT_MATERIAL , // RayContributionToHitGroupIndex, defined by UE4
+		RAY_TRACING_NUM_SHADER_SLOTS ,     // MultiplierForGeometryContributionToShaderIndex, defined by UE4
+		0 ,      // MissShaderIndex
+		Ray ,    // RayDesc
+		Payload // Payload
+	);
+
+
+	int BufferPos = (PixelCoord.y * ViewDim.x + PixelCoord.x) * 4;
+
+	if (Payload.IsHit()) {
+
+		float3 RayHitWorldPos = { 0,0,0 };
+		RayHitWorldPos = Ray.Origin + Ray.Direction * Payload.HitT;
+
+
+//		DebugTex[BufferPos + 0] = RayHitWorldPos.x;
+//		DebugTex[BufferPos + 1] = RayHitWorldPos.y;
+//		DebugTex[BufferPos + 2] = RayHitWorldPos.z;
+
+		DebugTex[BufferPos + 0] = WorldPosition.x;
+		DebugTex[BufferPos + 1] = WorldPosition.y;
+		DebugTex[BufferPos + 2] = WorldPosition.z;
+
+		DebugTex[BufferPos + 3] = Payload.HitT;
+
+		//     DebugTex[PixelCoord.x * PixelCoord.y * 3 + 0] = RayHitWorldPos.x;
+		//     DebugTex[PixelCoord.x * PixelCoord.y * 3 + 1] = RayHitWorldPos.y;
+		//     DebugTex[PixelCoord.x * PixelCoord.y * 3 + 2] = RayHitWorldPos.z;
+
+			 //outTex[PixelCoord] = MyValue;
+		outTex[PixelCoord] = Payload.HitT / 10000.0;
+		//outTex[PixelCoord] = 1;
+
+		//DebugTex[0]= RayHitWorldPos.x;
+		//DebugTex[1]=15;
+		//DebugTex[2]=25;
+		//DebugTex[3]=35;
+		//DebugTex[4]=45;
+		//DebugTex[5]=55;
+
+	} else {
+
+		outTex[PixelCoord] = 0;
+
+		DebugTex[BufferPos + 0] = 0;
+		DebugTex[BufferPos + 1] = 0;
+		DebugTex[BufferPos + 2] = 0;
+		DebugTex[BufferPos + 3] = 0;
+
+	}
+
 }
 
 [shader("miss")]
 void RayTraceTestMS(inout FMinimalPayload data)
 {
-    data.SetMiss();
+	data.SetMiss();
 }
 
 [shader("closesthit")]
-void RayTraceTestCHS(inout FMinimalPayload data, BuiltInTriangleIntersectionAttributes attribs)
+void RayTraceTestCHS(inout FMinimalPayload data ,BuiltInTriangleIntersectionAttributes attribs)
 {
-    data.HitT = RayTCurrent()/100000.0f;
-    //data.HitT = 1;
+	data.HitT = RayTCurrent();
+	//data.HitT = 1;
 }
